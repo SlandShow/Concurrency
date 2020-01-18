@@ -15,6 +15,7 @@ Latency = Task / N, where N - number of threads
 ```
 
 <a href="https://ibb.co/r0S3qBk"><img src="https://i.ibb.co/YQMXJ52/image.png" alt="image" border="0"></a>
+
 For real reducing, we need to usw correct count of threads (<b>N</b>), because idle threads can waste CPU time.
 
 ### 1. Painter.
