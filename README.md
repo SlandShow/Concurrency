@@ -98,3 +98,91 @@ To achieve optimality, it is necessary that the number of threads be equal to th
 The more complex the task, the more profitable it will be divided into parallel subtasks:
 
 <a href="https://ibb.co/PGssMZL"><img src="https://i.ibb.co/zVWWFhM/image.png" alt="image" border="0"></a>
+
+### 2. Resource sharing
+
+Threads using the same resource, for example - object, database, connection to socket and so on.
+But using this aproach, be carefull. What happend if two threads start do some dirty thing in parallel?
+
+
+We have two tasks, one for incrementing, second for decrementing.
+```
+CountInventory countInventory = new CountInventory();
+
+Thread first = new Thread(() -> {
+        for (int i = 0; i < 10000; i++) {
+             countInventory.increment();
+        }
+});
+
+Thread second = new Thread(() -> {
+        for (int i = 0; i < 10000; i++) {
+             countInventory.decrement();
+         }
+});
+```
+
+If we will start them sequently - reuslt will be 0.
+```
+first.start();
+first.join();
+
+second.start();
+second.join();
+
+System.out.print("Result - " + countInventory.getItems());
+```
+
+If we will start them in parallel - the result will not be determined.
+```
+first.start();
+second.start();
+
+first.join();
+second.join();
+
+System.out.print("Result - " + countInventory.getItems());
+```
+
+`countInventory.getItems())` can return -2200, -5796, -1785 and so on. 
+
+But why not zero?
+
+Because operator `var++` non atomic operation and can be splitted into separate operations:
+1. Get value of `var`
+2. Increment it
+3. Update new value for `var`
+
+In case of latency, our timing can be:
+```
+FIRST CASE
+----------
+
+first task
+1. currValue <- 0
+2. newValue <- 0 + 1
+6. currValue <- 1
+
+second task
+3. currValue <- 0
+4. currValue <- 0 - 1 <- -1
+5. items <- -1
+
+RESULT IS 1
+
+SECOND CASE
+-----------
+first task
+1. currValue <- 0
+2. newValue <- 0 + 1
+5. currValue <- 1
+
+second task
+3. currValue <- 0
+4. currValue <- 0 - 1 <- -1
+6. items <- -1
+
+RESULT IS -1
+```
+
+In boyh examples we can se incorrect result.
