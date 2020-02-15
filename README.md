@@ -221,6 +221,33 @@ public class SharedClass {
 ```
 All objects taken from heap. That's why `getName()` operaton is thead safe.
 
+### 4. Volatile.
+The Java volatile keyword guarantees visibility of changes to variables across threads.
+
+In a multithreaded application where the threads operate on non-volatile variables, each thread may copy variables from main memory into a CPU cache while working on them, for performance reasons. If your computer contains more than one CPU, each thread may run on a different CPU. That means, that each thread may copy the variables into the CPU cache of different CPUs. This is illustrated here:
+
+<a href="https://imgbb.com/"><img src="https://i.ibb.co/PjXyBYm/image.png" alt="image" border="0"></a>
+
+Imagine a situation in which two or more threads have access to a shared object which contains a counter variable declared like this:
+```
+public class SharedObject {
+    public int counter = 0;
+}
+```
+
+<a href="https://imgbb.com/"><img src="https://i.ibb.co/sJJSRqQ/image.png" alt="image" border="0"></a>
+
+#### The Java volatile Visibility Guarantee.
+The Java volatile keyword is intended to address variable visibility problems. By declaring the counter variable volatile all writes to the counter variable will be written back to main memory immediately. Also, all reads of the counter variable will be read directly from main memory.
+
+Here is how the volatile declaration of the counter variable looks:
+```
+public class SharedObject {
+    public volatile int counter = 0;
+}
+```
+
+[Read more here](http://tutorials.jenkov.com/java-concurrency/volatile.html "Resource").
 
 ### 4. Flushing with a volatile.
 
