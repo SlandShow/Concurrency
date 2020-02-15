@@ -187,7 +187,24 @@ RESULT IS -1
 
 In both examples we can se incorrect result.
 
-### 3. Flushing with a volatile.
+### 3. Atomic operations
+Atomic operations:
+1. Reference assigment 
+```
+Object obj1 = ...;
+Object obj2 = ...;
+obj1 = obj2; // Atomic
+```
+2. Assigments to primitive types (except long and double) - reads and writes:
+```
+int a = 123; // Atomic
+```
+
+Long & double - 64 bit, that's why java cannot guarantee atomic assigments:
+
+<a href="https://ibb.co/bHPHwJy"><img src="https://i.ibb.co/PTNTXQb/image.png" alt="image" border="0"></a>
+
+### 4. Flushing with a volatile.
 
 Let's look on this code sample:
 ```
