@@ -185,4 +185,66 @@ second task
 RESULT IS -1
 ```
 
-In boyh examples we can se incorrect result.
+In both examples we can se incorrect result.
+
+### 3. Flushing with a volatile.
+
+Let's look on this code sample:
+```
+class BadTask implements Runnable {
+    boolean keepRunning = true;
+
+    @Override
+    public void run() {
+        while (keepRunning) {
+            // Spin a while
+        }
+
+        System.out.println("Done.");
+    }
+}
+```
+
+Let's run it via new thread in `main()` function:
+```
+BadTask badTask = new BadTask();
+new Thread(badTask).start();
+Thread.sleep(1000);
+badTask.keepRunning = false;
+System.out.println("keepRunning is false");
+```
+
+The intention of this code is to let BadTask run for 1 second and after that to stop it by setting keepRunning boolean to false. As simple as it may look this code is doomed to fail - the BadTask won’t stop after 1 second and will run until you terminate the program manually.
+
+If the program does not stop you may wonder what happend. In short - the main thread and the thread running BadTask have been executed on different cores. Each core has its own set of registers and caches. The new value of keepRunning has been written to one of these without being flushed to the main memory. Thus it is not visible to the code running on a different core.
+
+Ok, how we can fix it? The simplest and the most correct way is to mark this variable volatile. Another approach would be to acquire a common lock when accessing it but that would be definetly an overkill.
+
+So what we will do today? We will introduce another variable marked with a volatile keyword! In the above code it does not make much sense and is only for demonstrating some aspects of Java memory model. But think about a scenario where there are more variables of keepRunning nature. Have a look at the below code that does not have visibility problem anymore:
+```
+class BadTask implements Runnable {
+        boolean keepRunning = true;
+        volatile boolean flush = true; // !
+
+        @Override
+        public void run() {
+                while(keepRunning) {
+                        if(flush); // Happens before
+                }
+                System.out.println("BadTask is done.");
+        }
+}
+```
+
+And let's run it again:
+```
+BadTask r = new BadTask();
+new Thread(r).start();
+Thread.sleep(1000);
+r.keepRunning = false;
+r.flush = false;
+System.out.println("keepRunning is false");
+```
+
+So as already mentioned we have introduced a new volatile variable “flush”. We do two things with it. First, we do a write operation in the main thread, right after modifying a non-volatile keepRunning variable. Second, in the thread running BadTask, we do a read operation on it.
+Now, how come the value of keepRunning is flushed to the main memory? This is guaranteded by the current Java memory model. According to JSR133 “writing to a volatile field has the same memory effect as a monitor release, and reading from a volatile field has the same memory effect as a monitor acquire”. Thus, actions on memory done by one thread before writing to a volatile variable will be visible to another thread after reading that variable.
