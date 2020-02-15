@@ -185,7 +185,7 @@ second task
 RESULT IS -1
 ```
 
-In both examples we can se incorrect result.
+In both examples we can see incorrect result.
 
 ### 3. Atomic operations
 Atomic operations:
@@ -203,6 +203,24 @@ int a = 123; // Atomic
 Long & double - 64 bit, that's why java cannot guarantee atomic assigments:
 
 <a href="https://ibb.co/bHPHwJy"><img src="https://i.ibb.co/PTNTXQb/image.png" alt="image" border="0"></a>
+
+Let's look on next code:
+```
+// Which of the following operations are atomic and thread safe?
+public class SharedClass {
+        private String name;
+ 
+        public void updateString(String name) {
+            this.name = name;
+        }
+        
+        public String getName() {
+            return name;
+        }
+    }
+```
+All objects taken from heap. That's why `getName()` operaton is thead safe.
+
 
 ### 4. Flushing with a volatile.
 
