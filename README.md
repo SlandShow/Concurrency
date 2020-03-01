@@ -269,7 +269,7 @@ void unlock() {
 
 It's very important to say, that modify operations with `flag` and `last` must be as one atomic operation. Because we need to define which thread tried to  acquire the lock last.
 
-#### The Java volatile Visibility Guarantee.
+### The Java volatile Visibility Guarantee.
 The Java volatile keyword is intended to address variable visibility problems. By declaring the counter variable volatile all writes to the counter variable will be written back to main memory immediately. Also, all reads of the counter variable will be read directly from main memory.
 
 Here is how the volatile declaration of the counter variable looks:
