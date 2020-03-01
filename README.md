@@ -270,6 +270,56 @@ void unlock() {
 ### ReentrantLock
 A [reentrant mutual exclusion Lock](https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/locks/ReentrantLock.html "Docs") with the same basic behavior and semantics as the implicit monitor lock accessed using synchronized methods and statements, but with extended capabilities.
 
+Basic usage of Lock object:
+```
+Lock lock = new ReentrantLock();
+try {
+    lock.lock();
+    // Critical section...
+} finally {
+    lock.unlock();
+}
+```
+
+Versus synchronized:
+```
+synchronized(mutexObject) {
+    // Critival section...
+}    
+```
+
+Result here is the same.
+
+When we try to `lock.lock()`, out thread will spin a while for getting access to mutual exclusion. It's like a Peterson spin-lock or like a basic synchronized construction. 
+
+Let's talk about contention. A lock is said to be contented when there are multiple threads concurrently trying to acquire the lock while it’s taken. That's main property of all spin-locks.
+
+And yes, what is a main difference between spin-lock and ReentrantLock? In ReentrantLock we have special `tryLock()` method, which Acquires the lock only if it is not held by another thread at the time of invocation.
+```
+Lock lock = new ReentrantLock();
+...
+void tryToGetMutex() {
+    if (lock.tryLock()) {
+        try {
+            // Critical section...
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+`tryLock()` can return true and acquire the lock if it is free, and can return false if lock is not free. Main difference is that `tryLock()` in case if non-acquiring don't spin a while until lock will be under this thread. Instead of this case, we can retry to call `tryToGetMutex()` manually in next steps.
+
+So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://tutorials.jenkov.com/java-concurrency/starvation-and-fairness.html "Docs"):
+```
+ @param fair {@code true} if this lock should use a fair ordering policy
+ ```
+ 
+ If a thread is not granted CPU time because other threads grab it all, it is called "starvation". The thread is "starved to death" because other threads are allowed the CPU time instead of it. The solution to starvation is called "fairness" - that all threads are fairly granted a chance to execute. Also, fairness may reduce throughpu of application!
+ 
+ 
+
 ### The Java volatile Visibility Guarantee.
 The Java volatile keyword is intended to address variable visibility problems. By declaring the counter variable volatile all writes to the counter variable will be written back to main memory immediately. Also, all reads of the counter variable will be read directly from main memory.
 
