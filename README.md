@@ -16,7 +16,7 @@ Latency = Task / N, where N - number of threads
 
 <a href="https://ibb.co/r0S3qBk"><img src="https://i.ibb.co/YQMXJ52/image.png" alt="image" border="0"></a>
 
-For real reducing, we need to usw correct count of threads (<b>N</b>), because idle threads can waste CPU time.
+For real reducing, we need to use correct count of threads (<b>N</b>), because idle threads can waste CPU time.
 
 So, thats why:
 ```
@@ -236,6 +236,38 @@ public class SharedObject {
 ```
 
 <a href="https://imgbb.com/"><img src="https://i.ibb.co/sJJSRqQ/image.png" alt="image" border="0"></a>
+
+### Locks, Mutual exclusion
+Mutual exclusion (Mutex) garantee that only one thread can execute some critical section, while another have no access to this section.
+
+Let's check Peterson algorithm for 2-threaded apllication via C++ based pseudo-code:
+```
+struct Lock {
+    /* Atomic int - special type, writing & reading from this variables happens as atomic operation */
+    atomic_int last;
+    atomic_int flag[2];
+}
+
+// Spin-lock realisation for 2-threaded application
+void lock() {
+    int me = threadId(); // Return id of thread, 0 or 1
+    int other = 1 - me; // Id of another thread, 1, or 0
+    
+    // ONE atomic operation
+    flag[me] = 1; 
+    last = me;
+    
+    // If another thread not acquire the lock and last guy who acquire the lock is me - spin a while
+    while (flag[other] && last == me) {}
+}
+
+void unlock() {
+    me = threadId();
+    flag[me] = 0;
+}
+ ```
+
+It's very important to say, that modify operations with `flag` and `last` must be as one atomic operation. Because we need to define which thread tried to  acquire the lock last.
 
 #### The Java volatile Visibility Guarantee.
 The Java volatile keyword is intended to address variable visibility problems. By declaring the counter variable volatile all writes to the counter variable will be written back to main memory immediately. Also, all reads of the counter variable will be read directly from main memory.
