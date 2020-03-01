@@ -270,6 +270,17 @@ void unlock() {
 ### ReentrantLock
 A [reentrant mutual exclusion Lock](https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/locks/ReentrantLock.html "Docs") with the same basic behavior and semantics as the implicit monitor lock accessed using synchronized methods and statements, but with extended capabilities.
 
+What actually "reentrant" word means? Reentrant mutex (recursive mutex, recursive lock) is a particular type of mutual exclusion (mutex) device that may be locked multiple times by the same process/thread, without causing a deadlock.
+
+```
+// No deadlocks here!
+synchronized(mutexA) {
+    synchronized(mutexA) {
+        // Some code...
+    }
+}
+```
+
 Basic usage of Lock object:
 ```
 Lock lock = new ReentrantLock();
@@ -288,7 +299,7 @@ synchronized(mutexObject) {
 }    
 ```
 
-Result here is the same.
+Result here is the same (ecursive mutex property still exists).
 
 When we try to `lock.lock()`, out thread will spin a while for getting access to mutual exclusion. It's like a Peterson spin-lock or like a basic synchronized construction. 
 
