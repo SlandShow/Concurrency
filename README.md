@@ -266,7 +266,7 @@ void unlock() {
     flag[me] = 0;
 }
  ```
-### More Spin-locks, exponential backoff
+### More Spin-locks
 Spinlock is a lock which causes a thread trying to acquire it to simply wait in a loop ("spin") while repeatedly checking if the lock is available.
 
 #### Test and set locks
@@ -347,6 +347,68 @@ void tryToGetMutex() {
 ```
 
 `tryLock()` can return true and acquire the lock if it is free, and can return false if lock is not free. Main difference is that `tryLock()` in case if non-acquiring don't spin a while until lock will be under this thread. Instead of this case, we can retry to call `tryToGetMutex()` manually in next steps.
+
+### Exponential backoff
+Exponential backoff is an algorithm that uses feedback to multiplicatively decrease the rate of some process, in order to gradually find an acceptable rate. It's more common definition, but how we can use it in concurrent applications?
+
+As we saw before, spin-lock alghoritms make several steps:
+1. Repeatedly reads the lock
+2. When the lock appears to be free, attemps to acquire the lock.
+
+Here is a key observation: if some other thread acquires the lock between the first and second step, then, most likely, there is a high contention for this lock. Clearly, it is a bad idea to try to acquire a lock for which there is high contention. Instead, it is more effective for the thread to back off for some duration, giving competing threads a chance to finish.
+
+```
+class Backoff {
+    private final int minDelay;
+    private final int maxDelay;
+    private int limit;
+    private final Random random;
+
+    public Backoff(int min, int max) {
+        this.minDelay = min;
+        this.maxDelay = max;
+        limit = minDelay;
+        random = new Random();
+    }
+
+    public void backoff() throws InterruptedException {
+        int delay = random.nextInt(limit);
+        limit = Math.min(maxDelay, 2 * limit);
+        Thread.sleep(delay);
+    }
+}
+
+class BackoffLock implements Lock {
+    private final int minDelay = ...;
+    private final int maxDelay = ..;
+    private AtomicBoolean state = new AtomicBoolean(false);
+
+    @Override
+    public void lock() {
+        Backoff backoff = new Backoff(minDelay, maxDelay);
+        while (true) {
+            while (state.get()) ;
+
+            if (!state.getAndSet(true)) {
+                return;
+            } else {
+                try {
+                    backoff.backoff();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void unlock() {
+        state.set(false);
+    }
+// Another code ...
+}
+```
+Anyway, perfomance of backoff is sensitive to the choice of `minDelay` and `maxDelay`.
 
 #### Fairness and starvation
 So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://tutorials.jenkov.com/java-concurrency/starvation-and-fairness.html "Docs"):
