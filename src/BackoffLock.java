@@ -8,10 +8,12 @@ import java.util.concurrent.locks.Lock;
 public class BackoffLock implements Lock {
 
     private AtomicBoolean state = new AtomicBoolean(false);
+    private static final int MIN = ...; 
+    private static final int MAX = ...;
 
     @Override
     public void lock() {
-        Backoff backoff = new Backoff(1, 4);
+        Backoff backoff = new Backoff(MIN, MAX);
         while (true) {
             while (state.get()) ;
 
