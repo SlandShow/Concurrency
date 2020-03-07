@@ -426,7 +426,7 @@ Let's check some metrics, created on my MacBook Pro 13 mid 2019:
 
 4. TASLock with 4 threads:
 
-<a href="https://ibb.co/vhJCJyy"><img src="https://i.ibb.co/zFSWS99/TASLock-2.png" alt="TASLock-2" border="0"></a>
+<a href="https://ibb.co/Gvw8c53"><img src="https://i.ibb.co/ynTZWQB/photo-2020-03-07-19-05-54.jpg" alt="photo-2020-03-07-19-05-54" border="0"></a>
 
 5. BackoffLock with 4 threads:
 
