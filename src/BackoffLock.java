@@ -56,7 +56,6 @@ public class BackoffLock implements Lock {
 
     @Override
     public void lockInterruptibly() throws InterruptedException {
-
     }
 
     @Override
