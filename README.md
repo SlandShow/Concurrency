@@ -418,7 +418,7 @@ Let's check some metrics, created on my MacBook Pro 13 mid 2019:
 
 2. BackoffLock with 2 threads:
 
-<a href="https://ibb.co/m4NHjJt"><img src="https://i.ibb.co/GRHV67k/image.png" alt="image" border="0"></a>
+<a href="https://ibb.co/GCRg9wG"><img src="https://i.ibb.co/NWKwrhf/photo-2020-03-07-19-05-24.jpg" alt="photo-2020-03-07-19-05-24" border="0"></a>
 
 3. ReentrantLock with 2 threads:
 
