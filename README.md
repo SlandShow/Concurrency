@@ -410,6 +410,28 @@ class BackoffLock implements Lock {
 ```
 Anyway, perfomance of backoff is sensitive to the choice of `minDelay` and `maxDelay`.
 
+Let's check some metrics, created on my MacBook Pro 13 mid 2019:
+
+1. TASLock with 2 threads:
+
+<a href="https://ibb.co/VQJVZBN"><img src="https://i.ibb.co/9VcnLYv/TASLock.png" alt="TASLock" border="0"></a>
+
+2. BackoffLock with 2 threads:
+
+<a href="https://ibb.co/m4NHjJt"><img src="https://i.ibb.co/GRHV67k/image.png" alt="image" border="0"></a>
+
+3. ReentrantLock with 2 threads:
+
+<a href="https://ibb.co/HdJqgKN"><img src="https://i.ibb.co/X8wtJWy/Reentrant-Lock.png" alt="Reentrant-Lock" border="0"></a>
+
+4. TASLock with 4 threads:
+
+<a href="https://ibb.co/vhJCJyy"><img src="https://i.ibb.co/zFSWS99/TASLock-2.png" alt="TASLock-2" border="0"></a>
+
+5. BackoffLock with 4 threads:
+
+<a href="https://ibb.co/8zSSvBX"><img src="https://i.ibb.co/wJxxGLY/Back-Off-2.png" alt="Back-Off-2" border="0"></a>
+
 #### Fairness and starvation
 So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://tutorials.jenkov.com/java-concurrency/starvation-and-fairness.html "Docs"):
 ```
