@@ -266,6 +266,31 @@ void unlock() {
     flag[me] = 0;
 }
  ```
+### More Spin-locks, exponential backoff
+Spinlock is a lock which causes a thread trying to acquire it to simply wait in a loop ("spin") while repeatedly checking if the lock is available.
+
+#### Test and set locks
+[Test-and-set](https://en.wikipedia.org/wiki/Test-and-set) instruction - atomic instruction used to write some value to a memory location and return its old value.
+
+It's very easy to use tests-and-set operation in lock algorithm inplementation. Let's check the test-and-set lock (TASLock) example:
+```
+class TASLock implements Lock {
+    private AtomicBoolean state = new AtomicBoolean(false);
+    
+    @Override
+    public void lock() {
+        while(state.getAndSet(true));
+    }
+    
+    @Override
+    public void unlock() {
+        state.set(false);
+    }
+    
+    // Other Lock methods...
+}
+```
+Because they avoid overhead from operating system process rescheduling or context switching, spinlocks are efficient if threads are likely to be blocked for only short periods. For this reason, operating-system kernels often use spinlocks. However, spinlocks become wasteful if held for longer durations, as they may prevent other threads from running and require rescheduling. The longer a thread holds a lock, the greater the risk that the thread will be interrupted by the OS scheduler while holding the lock.
 
 ### ReentrantLock
 A [reentrant mutual exclusion Lock](https://docs.oracle.com/javase/7/docs/api/java/util/concurrent/locks/ReentrantLock.html "Docs") with the same basic behavior and semantics as the implicit monitor lock accessed using synchronized methods and statements, but with extended capabilities.
@@ -301,8 +326,9 @@ synchronized(mutexObject) {
 
 Result here is the same (ecursive mutex property still exists).
 
-When we try to `lock.lock()`, out thread will spin a while for getting access to mutual exclusion. It's like a Peterson spin-lock or like a basic synchronized construction. 
+When we try to `lock.lock()`, out thread will [spin](https://en.wikipedia.org/wiki/Spinlock) a while for getting access to mutual exclusion. It's like a Peterson spin-lock or like a basic synchronized construction. 
 
+#### Contention
 Let's talk about contention. A lock is said to be contented when there are multiple threads concurrently trying to acquire the lock while it’s taken. That's main property of all spin-locks.
 
 And yes, what is a main difference between spin-lock and ReentrantLock? In ReentrantLock we have special `tryLock()` method, which Acquires the lock only if it is not held by another thread at the time of invocation.
@@ -330,8 +356,6 @@ So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://
  
  If a thread is not granted CPU time because other threads grab it all, it is called "starvation". The thread is "starved to death" because other threads are allowed the CPU time instead of it. The solution to starvation is called "fairness" - that all threads are fairly granted a chance to execute. Also, fairness may reduce throughpu of application!
  
- 
-
 ### The Java volatile Visibility Guarantee.
 The Java volatile keyword is intended to address variable visibility problems. By declaring the counter variable volatile all writes to the counter variable will be written back to main memory immediately. Also, all reads of the counter variable will be read directly from main memory.
 
