@@ -601,24 +601,26 @@ Deadlock may happen, and we can detect it using next command:
 Found one Java-level deadlock:
 =============================
 "Thread-0":
-  waiting to lock monitor 0x000000010ffc1f00 (object 0x000000070feeb370, a java.lang.Object),
+  waiting to lock monitor 0x000000010a8d9f00 (object 0x000000070feeb0e8, a java.lang.Object),
   which is held by "Thread-1"
 "Thread-1":
-  waiting to lock monitor 0x000000010ffc1e00 (object 0x000000070feeb360, a java.lang.Object),
+  waiting to lock monitor 0x000000010a8d9e00 (object 0x000000070feeb0d8, a java.lang.Object),
   which is held by "Thread-0"
 
 Java stack information for the threads listed above:
 ===================================================
 "Thread-0":
-	at Main.potentialDeadLockForT1(Main.java:38)
-	- waiting to lock <0x000000070feeb370> (a java.lang.Object)
-	- locked <0x000000070feeb360> (a java.lang.Object)
+	at Main.potentialDeadLockForT1(Main.java:40)
+	- waiting to lock <0x000000070feeb0e8> (a java.lang.Object)
+	- locked <0x000000070feeb0d8> (a java.lang.Object)
+	at Main.lambda$main$0(Main.java:20)
 	at Main$$Lambda$14/0x0000000800066040.run(Unknown Source)
 	at java.lang.Thread.run(java.base@11.0.5/Thread.java:834)
 "Thread-1":
 	at Main.potentialDeadLockForT2(Main.java:48)
-	- waiting to lock <0x000000070feeb360> (a java.lang.Object)
-	- locked <0x000000070feeb370> (a java.lang.Object)
+	- waiting to lock <0x000000070feeb0d8> (a java.lang.Object)
+	- locked <0x000000070feeb0e8> (a java.lang.Object)
+	at Main.lambda$main$1(Main.java:25)
 	at Main$$Lambda$15/0x0000000800066440.run(Unknown Source)
 	at java.lang.Thread.run(java.base@11.0.5/Thread.java:834)
 
