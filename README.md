@@ -626,3 +626,31 @@ Java stack information for the threads listed above:
 
 Found 1 deadlock.
 ```
+
+3. [jmap](https://docs.oracle.com/javase/7/docs/technotes/tools/share/jmap.html)
+
+jmap prints shared object memory maps or heap memory details of a given process or core file or a remote debug server.
+
+For example, we can create histogram:
+```
+$ jmap -histo %SOME_PROCESS_ID%
+ num     #instances         #bytes  class name (module)
+-------------------------------------------------------
+...	...		    ...     ...
+```
+4. [jstat](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/jstat.html)
+
+The jstat command displays performance statistics for an instrumented [Java HotSpot VM](https://en.wikipedia.org/wiki/HotSpot).
+
+HotSpot VM take place in:
+* A Java Classloader
+* A Java bytecode interpreter
+* Client and Server virtual machines, optimized for their respective uses
+* Several garbage collectors
+* A set of supporting runtime libraries
+
+Usage of jstat: `jstat -option <pid> <interval> <count>`.
+
+Let's see some example.
+
+...
