@@ -518,8 +518,17 @@ Now, how come the value of keepRunning is flushed to the main memory? This is gu
 
 Some advanced topics and utilities for tracking JVM state. Some information taken from [OK course](https://m.ok.ru/dk?st.cmd=movieLayer&st.groupId=53245288710321&st.discId=1356680596145&st.retLoc=group&st.rtu=%2Fdk%3Fst.cmd%3DaltGroupMovies%26st.mrkId%3D1550654970205%26st.groupId%3D53245288710321%26st.frwd%3Don%26st.page%3D1%26_prevCmd%3DaltGroupMovies%26tkn%3D424&st.discType=GROUP_MOVIE&st.mvId=1356680596145&_prevCmd=altGroupMovies&tkn=3533#).
 
-### Tools for monitoring 
+Java platform:
+
+<a href="https://ibb.co/1TP5cC9"><img src="https://i.ibb.co/rHzS9BZ/Screenshot-2020-03-08-at-11-46-56.png" alt="Screenshot-2020-03-08-at-11-46-56" border="0"></a>
+
+We start from [serviceability](https://en.wikipedia.org/wiki/Serviceability_(computer)).
+
+[here some examples](https://github.com/odnoklassniki/jvm-serviceability-examples)
+
+### Tools for monitoring , thread dumps
 1. [jps](https://docs.oracle.com/javase/8/docs/technotes/tools/unix/jps.html)
+
 jps - Java Virtual Machine Process Status Tool. Lists the instrumented Java Virtual Machines (JVMs) on the target system.
 ```
 $ jps 
@@ -530,6 +539,88 @@ And get:
 40489 Launcher
 3389 
 ```
+
+Where first number - process id, second - name of java main class.
+
 So, we can detect java proces with Intelij IDEA (java process 3389):
 
 <a href="https://ibb.co/fXjZFx3"><img src="https://i.ibb.co/yNHKPQz/Screenshot-2020-03-08-at-11-30-54.png" alt="Screenshot-2020-03-08-at-11-30-54" border="0"></a>
+
+2. [jstack](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr016.html)
+
+jstack creates thread dump according on process id.
+```
+$ jstack %SOME_PROCESS_ID%
+```
+
+But one warming, jstack neends cooperation with existing JVM. Jstack sends, let's say, request to JVM and only after that creates dump. Sometimes problems may occurs JVM and jstack can hover. In this case you can try:
+```
+jstack -F %SOME_PROCESS_ID%
+```
+Also, jstack can help you to detect deadlock, let's see the example:
+```
+final Object mutexA = new Object();
+final Object mutexB = new Object();
+    
+void potentialDeadLockForT1() {
+     synchronized (mutexA) {
+         synchronized (mutexB) {
+            System.out.println("No deadlock from T1");
+         }
+     }
+ }
+
+void potentialDeadLockForT2() {
+     synchronized (mutexB) {
+         synchronized (mutexA) {
+            System.out.println("No deadlock from T2");
+         }
+     }
+}
+```
+And let's try to execute two threads:
+```
+Thread t1 = new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                potentialDeadLockForT1();
+            }
+});
+
+Thread t2 = new Thread(() -> {
+            for (int i = 0; i < 10; i++) {
+                potentialDeadLockForT2();
+            }
+});
+
+t1.start();
+t2.start();
+```
+
+Deadlock may happen, and we can detect it using next command:
+```
+Found one Java-level deadlock:
+=============================
+"Thread-0":
+  waiting to lock monitor 0x000000010ffc1f00 (object 0x000000070feeb370, a java.lang.Object),
+  which is held by "Thread-1"
+"Thread-1":
+  waiting to lock monitor 0x000000010ffc1e00 (object 0x000000070feeb360, a java.lang.Object),
+  which is held by "Thread-0"
+
+Java stack information for the threads listed above:
+===================================================
+"Thread-0":
+	at Main.potentialDeadLockForT1(Main.java:38)
+	- waiting to lock <0x000000070feeb370> (a java.lang.Object)
+	- locked <0x000000070feeb360> (a java.lang.Object)
+	at Main$$Lambda$14/0x0000000800066040.run(Unknown Source)
+	at java.lang.Thread.run(java.base@11.0.5/Thread.java:834)
+"Thread-1":
+	at Main.potentialDeadLockForT2(Main.java:48)
+	- waiting to lock <0x000000070feeb360> (a java.lang.Object)
+	- locked <0x000000070feeb370> (a java.lang.Object)
+	at Main$$Lambda$15/0x0000000800066440.run(Unknown Source)
+	at java.lang.Thread.run(java.base@11.0.5/Thread.java:834)
+
+Found 1 deadlock.
+```
