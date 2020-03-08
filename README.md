@@ -513,3 +513,23 @@ System.out.println("keepRunning is false");
 
 So as already mentioned we have introduced a new volatile variable “flush”. We do two things with it. First, we do a write operation in the main thread, right after modifying a non-volatile keepRunning variable. Second, in the thread running BadTask, we do a read operation on it.
 Now, how come the value of keepRunning is flushed to the main memory? This is guaranteded by the current Java memory model. According to JSR133 “writing to a volatile field has the same memory effect as a monitor release, and reading from a volatile field has the same memory effect as a monitor acquire”. Thus, actions on memory done by one thread before writing to a volatile variable will be visible to another thread after reading that variable.
+
+## JVM perfomance
+
+Some advanced topics and utilities for tracking JVM state. Some information taken from [OK course](https://m.ok.ru/dk?st.cmd=movieLayer&st.groupId=53245288710321&st.discId=1356680596145&st.retLoc=group&st.rtu=%2Fdk%3Fst.cmd%3DaltGroupMovies%26st.mrkId%3D1550654970205%26st.groupId%3D53245288710321%26st.frwd%3Don%26st.page%3D1%26_prevCmd%3DaltGroupMovies%26tkn%3D424&st.discType=GROUP_MOVIE&st.mvId=1356680596145&_prevCmd=altGroupMovies&tkn=3533#).
+
+### Tools for monitoring 
+1. [jps](https://docs.oracle.com/javase/8/docs/technotes/tools/unix/jps.html)
+jps - Java Virtual Machine Process Status Tool. Lists the instrumented Java Virtual Machines (JVMs) on the target system.
+```
+$ jps 
+```
+And get:
+```
+41841 Jps
+40489 Launcher
+3389 
+```
+So, we can detect java proces with Intelij IDEA (java process 3389):
+
+<a href="https://ibb.co/fXjZFx3"><img src="https://i.ibb.co/yNHKPQz/Screenshot-2020-03-08-at-11-30-54.png" alt="Screenshot-2020-03-08-at-11-30-54" border="0"></a>
