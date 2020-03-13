@@ -432,6 +432,9 @@ Let's check some metrics, created on my MacBook Pro 13 mid 2019:
 
 <a href="https://ibb.co/8zSSvBX"><img src="https://i.ibb.co/wJxxGLY/Back-Off-2.png" alt="Back-Off-2" border="0"></a>
 
+### Cache coherence
+
+
 #### Fairness and starvation
 So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://tutorials.jenkov.com/java-concurrency/starvation-and-fairness.html "Docs"):
 ```
@@ -651,6 +654,47 @@ HotSpot VM take place in:
 
 Usage of jstat: `jstat -option <pid> <interval> <count>`.
 
-Let's see some example.
+5. [jconsole](https://docs.oracle.com/javase/8/docs/technotes/guides/management/jconsole.html)
 
-...
+jsonsole - GUI tool for tracing memory usage, threads, CPU usage and so on.
+```
+jsoncole $SOME_PROCESS_ID
+```
+
+<a href="https://ibb.co/gVgP5PM"><img src="https://i.ibb.co/dgKLdL0/Screenshot-2020-03-13-at-21-58-39.png" alt="Screenshot-2020-03-13-at-21-58-39" border="0"></a>
+
+6. [VisualVM](https://visualvm.github.io/)
+
+VisualVM - GUI profiler for monitoring state of Java application (CPU, memory usage, threads latency).
+
+<a href="https://ibb.co/drHKyfq"><img src="https://i.ibb.co/xDr5Q20/Screenshot-2020-03-13-at-23-05-08.png" alt="Screenshot-2020-03-13-at-23-05-08" border="0"></a>
+
+
+Let's, for example, execute next code:
+```
+Map<String, Object> map = new HashMap<>();
+while (true) {
+       map.put("JVM", new Object());
+}
+```
+We always put to map new object and always get collision. That means that we creates new objects in each iteration. Let's check profiler:
+
+<a href="https://ibb.co/4RCGYVm"><img src="https://i.ibb.co/hFrjZm7/Screenshot-2020-03-13-at-23-20-32.png" alt="Screenshot-2020-03-13-at-23-20-32" border="0"></a>
+
+As we can see `HashMap` avoids `OutOfMemoryError`, Garbage Collector can successfully reuse heap.
+
+Now, we can execute another code:
+```
+List<Object> list = new LinkedList<>();
+while (true) {
+      list.add(new Object());
+}
+```
+Here we have pointers no previous and next element, so, Garbage Collector cannot reuse heap space. 
+
+<a href="https://ibb.co/xGzcmn4"><img src="https://i.ibb.co/1KRpsCS/Screenshot-2020-03-13-at-23-32-09.png" alt="Screenshot-2020-03-13-at-23-32-09" border="0"></a>
+
+And we finally get `Exception in thread "main" java.lang.OutOfMemoryError: Java heap space`. Also, if we will use `ArrayList`, we will get this error much faster. More detais [here](https://blog.overops.com/5-tips-for-reducing-your-java-garbage-collection-overhead/).
+
+
+
