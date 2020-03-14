@@ -433,7 +433,52 @@ Let's check some metrics, created on my MacBook Pro 13 mid 2019:
 <a href="https://ibb.co/8zSSvBX"><img src="https://i.ibb.co/wJxxGLY/Back-Off-2.png" alt="Back-Off-2" border="0"></a>
 
 ### Cache coherence
+[Cache coherence](https://en.wikipedia.org/wiki/Cache_coherence) - special situation on hardware level, when caches of processor cores are trying to synchronize data with main memory and with another core(s).
 
+#### Cache line
+Cache line - minimum amount of cache which can be loaded or stored to memory.
+
+For example, on x86 CPU cache line - 64 bytes.
+
+<a href="https://imgbb.com/"><img src="https://i.ibb.co/F4t3JxN/image.png" alt="image" border="0"></a>
+
+In such cases, special communication protocol exists ([MESI](https://en.wikipedia.org/wiki/MESI_protocol)), which sync core caches with each other and main memory, it's implemented on hardware level, as i mentiond before. But what about perfomance of our spin lock and backoff lock implementation?
+
+Let's look on more convenient variant of test-and-set spin lock - test-and-test-and-set lock:
+```
+class TTASLock implements Lock {
+
+    private AtomicBoolean state = new AtomicBoolean(false);
+
+    @Override
+    public void lock() {
+        while (true) {
+            while (state.get()) {}
+            
+            if (!state.getAndSet(true)) {
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void unlock() {
+        state.set(false);
+    }
+    
+    // Another methods...
+}    
+```
+
+And what is the difference between TTAS and TAS lock? Result will be the same, but one difference in perfomance. Let's compare two algorithms:
+
+<a href="https://ibb.co/Vwm7ZPF"><img src="https://i.ibb.co/7k4w563/image.png" alt="image" border="0"></a>
+
+Why TTAS working faster? Because in TTAS implementation we reduce number of accesses (`state.getAndSet(true)`) to the shared resource (atomic boolean state). We more read the data value and next - change it as needed. So, each processor has a chache, and when a processor reads from an adress in memory, it first checks whether the adress and it's contents are present in it's chache. If so, then the processor has a chache hit and can load value immediately. If not, there is a chache miss and processor must find value in main memory. Anyway, all three (TAS, TTAS, Backoff) implementations have two problems:
+1. Cache cohherence traffic
+2. Critical section utilization
+
+[More information about cache cohherence](https://www.youtube.com/watch?v=VcesAbhnGKU&list=PLlb7e2G7aSpQCPeKTcVBHJns_JOxrc_fT&index=11).
 
 #### Fairness and starvation
 So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://tutorials.jenkov.com/java-concurrency/starvation-and-fairness.html "Docs"):
