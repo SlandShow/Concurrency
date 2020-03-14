@@ -478,7 +478,7 @@ Why TTAS working faster? Because in TTAS implementation we reduce number of acce
 1. Cache cohherence traffic
 2. Critical section utilization
 
-[More information about cache cohherence](https://www.youtube.com/watch?v=VcesAbhnGKU&list=PLlb7e2G7aSpQCPeKTcVBHJns_JOxrc_fT&index=11).
+[More information about cache cohherence](https://www.youtube.com/watch?v=VcesAbhnGKU&list=PLlb7e2G7aSpQCPeKTcVBHJns_JOxrc_fT&index=11) and good [webpage](https://binaryterms.com/cache-coherence.html).
 
 #### Fairness and starvation
 So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://tutorials.jenkov.com/java-concurrency/starvation-and-fairness.html "Docs"):
