@@ -237,6 +237,65 @@ public class SharedObject {
 
 <a href="https://imgbb.com/"><img src="https://i.ibb.co/sJJSRqQ/image.png" alt="image" border="0"></a>
 
+### Memory barrier & reordering
+Let's look on next code:
+```
+class Shared {
+   int x;
+   int y;
+
+   void increment() {
+      x++;
+      y++;
+   }
+
+   void check() {
+      if (y > x) {
+         System.out.println("Ooops! y > x");
+      }
+   }
+}
+```
+
+Looks like `x` always be greater, than `y`, isn't it? If we just interrupt writer thread and check it after incrementation of `x`, condition still always be false? 
+
+And let's create two threads, one for increment and second for check:
+```
+Shared shared = new Shared();
+
+Thread writer = new Thread(() -> {
+   for (int i = 0; i < N; i++) {
+       shared.increment();
+   }
+});
+
+Thread reader = new Thread(() -> {
+   for (int i = 0; i < N; i++) {
+       shared.check();
+   }
+});
+
+writer.start();
+reader.start();
+```
+
+On my MacBook Pro if `N` = 10, all looks clean and i don't see `Ooops! y > x"`. If i will set `N` to 1000, for example, situation changes. In some executions i still see no misleading condition (x < y), but now it's looks so weird:
+```
+Ooops! y > x
+```
+
+But how can y be greater than x? Actually, this happens because of [CPU reordering](https://en.wikipedia.org/wiki/Memory_ordering) or [data race](https://riptutorial.com/c/example/2622/data-race). To improve perfomance, processor can reorder some instructions. CPU and Compiler can execute instractions out of order for better perfomance and utilization. That's why in several executions you can se that `y` > `x`, because CPU reorder this two instructions:
+```
+1. x++;
+2. y++;
+```
+
+How to fix it? Just use [memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)!
+For example, if we will use `volatile` fields, our instructions must be in correct order.
+
+[Look on section 17.4 Memory Model](https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html)
+[Another link](https://www.infoq.com/articles/memory_barriers_jvm_concurrency/)
+
 ### Locks, Mutual exclusion
 Mutual exclusion (Mutex) garantee that only one thread can execute some critical section, while another have no access to this section.
 
