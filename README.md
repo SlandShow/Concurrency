@@ -294,6 +294,7 @@ How to fix it? Just use [memory barrier](https://en.wikipedia.org/wiki/Memory_ba
 For example, if we will use `volatile` fields, our instructions must be in correct order.
 
 [Look on section 17.4 Memory Model](https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html)
+
 [Another link](https://www.infoq.com/articles/memory_barriers_jvm_concurrency/)
 
 ### Locks, Mutual exclusion
