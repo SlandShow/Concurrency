@@ -622,6 +622,73 @@ System.out.println("keepRunning is false");
 So as already mentioned we have introduced a new volatile variable “flush”. We do two things with it. First, we do a write operation in the main thread, right after modifying a non-volatile keepRunning variable. Second, in the thread running BadTask, we do a read operation on it.
 Now, how come the value of keepRunning is flushed to the main memory? This is guaranteded by the current Java memory model. According to JSR133 “writing to a volatile field has the same memory effect as a monitor release, and reading from a volatile field has the same memory effect as a monitor acquire”. Thus, actions on memory done by one thread before writing to a volatile variable will be visible to another thread after reading that variable.
 
+### CPU pipelines and inlining
+[Inlining](https://en.wikipedia.org/wiki/Inline_expansion) - special kind of optimization, when CPU (or VM) replace call of function with the body of the called function.
+
+[CPU pipelines](https://en.wikipedia.org/wiki/Instruction_pipelining) - special hardware pattern, when operations executes in async mode, when one instruction doesn't wait for another. As soon as an instruction is decoded, the decoding of the next one can start immediately, there is no need to wait for the previous instruction to finish. Also, in such cases processor [trying to predicate](https://en.wikipedia.org/wiki/Branch_predictor) branch of code to execute. It's optimization, which can improve perfomance, but there is no any guarantees.
+
+Let's see some [example](https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array) above:
+```
+int arraySize = 32768;
+int data[] = new int[arraySize];
+
+Random random = new Random(0);
+for (int c = 0; c < arraySize; ++c) {
+     data[c] = random.nextInt() % 256;
+}    
+
+// Optimization for branch predication
+// With this, the next loop runs faster
+Arrays.sort(data);
+        
+long sum = 0;
+
+for (int i = 0; i < 100000; ++i) {
+    // Primary loop
+    for (int c = 0; c < arraySize; ++c) {
+         if (data[c] >= 128) {
+             sum += data[c];
+	 }    
+    }
+}
+```
+
+Looks pretty simple, we have array with random generated numbers and two loops with some condition statement (`if statement`). 
+And it's really one intresting note about sorting. If our array is not sorted - performance is lost. 
+
+Test on my MacBook Pro:
+```
+NORMAL EXECUTION:
+around 5 ms
+
+WITH SORT:
+16 ms
+```
+
+But why? __Because of branch predication__.
+
+Consider an if-statement: At the processor level, it is a branch instruction:
+
+<a href="https://imgbb.com/"><img src="https://i.ibb.co/qYrT3G9/image.png" alt="image" border="0"></a>
+
+>You are a processor and you see a branch. You have no idea which way it will go. What do you do? You halt execution and wait until the previous instructions are complete. Then you continue down the correct path.
+
+__If you guess right every time__, the execution will never have to stop.
+__If you guess wrong too often__, you spend a lot of time stalling, rolling back, and restarting.
+
+And as author of answer tell us, we can prevent such branch predication by bitoperations replacement:
+
+Replace this
+```
+if (data[c] >= 128)
+    sum += data[c];
+```
+By this
+```
+int t = (data[c] - 128) >> 31;
+sum += ~t & data[c];
+```
+
 ## JVM perfomance
 
 Some advanced topics and utilities for tracking JVM state. Some information taken from [OK course](https://m.ok.ru/dk?st.cmd=movieLayer&st.groupId=53245288710321&st.discId=1356680596145&st.retLoc=group&st.rtu=%2Fdk%3Fst.cmd%3DaltGroupMovies%26st.mrkId%3D1550654970205%26st.groupId%3D53245288710321%26st.frwd%3Don%26st.page%3D1%26_prevCmd%3DaltGroupMovies%26tkn%3D424&st.discType=GROUP_MOVIE&st.mvId=1356680596145&_prevCmd=altGroupMovies&tkn=3533#).
