@@ -673,10 +673,10 @@ And it's really one intresting note about sorting. If our array is not sorted - 
 Test on my MacBook Pro:
 ```
 NORMAL EXECUTION:
-around 5 ms
+around 16 ms
 
 WITH SORT:
-16 ms
+5 ms
 ```
 
 But why? __Because of branch predication__.
