@@ -625,6 +625,20 @@ Now, how come the value of keepRunning is flushed to the main memory? This is gu
 ### CPU pipelines and inlining
 [Inlining](https://en.wikipedia.org/wiki/Inline_expansion) - special kind of optimization, when CPU (or VM) replace call of function with the body of the called function.
 
+Example:
+```
+int add(int a, int b) {
+    return a + b;
+}
+
+int result = add(1, 2);
+```
+
+Will be inlined:
+```
+int result = 1 + 2;
+```
+
 [CPU pipelines](https://en.wikipedia.org/wiki/Instruction_pipelining) - special hardware pattern, when operations executes in async mode, when one instruction doesn't wait for another. As soon as an instruction is decoded, the decoding of the next one can start immediately, there is no need to wait for the previous instruction to finish. Also, in such cases processor [trying to predicate](https://en.wikipedia.org/wiki/Branch_predictor) branch of code to execute. It's optimization, which can improve perfomance, but there is no any guarantees.
 
 Let's see some [example](https://stackoverflow.com/questions/11227809/why-is-processing-a-sorted-array-faster-than-processing-an-unsorted-array) above:
@@ -688,6 +702,42 @@ By this
 int t = (data[c] - 128) >> 31;
 sum += ~t & data[c];
 ```
+
+__Another example__:
+```
+void isNonNegative(int num) {
+        if (num >= 0) {
+            // Some operations here...
+        } else {
+            // Some operations here...
+        }
+    }
+```
+
+And let's test it:
+```
+for (int i = 0; i < 10000000; i++) {
+    isNonNegative(5);       
+}
+```
+__Execution time__: 0.004582331
+
+Another test:
+```
+int[] nums = {-100, 2, -30, -5, 0, -1, -6, 4, 5, 7, 9, 9};
+for (int i = 0; i < 10000000; i++) {
+     isNonNegative(nums[i % nums.length);
+}
+```
+__Execution time__: 0.026957939
+
+And last test with random numbers:
+```
+for (int i = 0; i < Integer.MAX_VALUE; i++) {
+    isNonNegative(new Random().nextInt() % Integer.MAX_VALUE);
+}
+```
+__Execution time__: 1.145906255
 
 ## JVM perfomance
 
