@@ -731,13 +731,22 @@ for (int i = 0; i < 10000000; i++) {
 ```
 __Execution time__: 0.026957939
 
+Test with random array numbers
+```
+int[] nums = {-100, 2, -30, -5, 0, -1, -6, 4, 5, 7, 9, 9};
+for (int i = 0; i < 10000000; i++) {
+     isNonNegative(nums[Math.abs(new Random().nextInt()) % nums.length]);
+}
+```
+__Execution time__: 0.627501542
+
 And last test with random numbers:
 ```
-for (int i = 0; i < Integer.MAX_VALUE; i++) {
+for (int i = 0; i < 10000000; i++) {
     isNonNegative(new Random().nextInt() % Integer.MAX_VALUE);
 }
 ```
-__Execution time__: 1.145906255
+__Execution time__: 0.621791105
 
 ## JVM perfomance
 
