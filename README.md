@@ -540,6 +540,28 @@ Why TTAS working faster? Because in TTAS implementation we reduce number of acce
 
 [More information about cache cohherence](https://www.youtube.com/watch?v=VcesAbhnGKU&list=PLlb7e2G7aSpQCPeKTcVBHJns_JOxrc_fT&index=11) and good [webpage](https://binaryterms.com/cache-coherence.html).
 
+### Actor model
+[Actor model](https://en.wikipedia.org/wiki/Actor_model) - conccurency model abstraction, where _actor_ is a fundamental unit of computation. This concept can be used [without any locks](https://doc.akka.io//docs/akka/current/typed/guide/actors-motivation.html?_ga=2.49977316.371155406.1588698651-194131526.1588698651#the-illusion-of-shared-memory-on-modern-computer-architectures), because actors [send messages](https://www.brianstorti.com/the-actor-model/) to each other. Sending a message does not transfer the thread of execution from the sender to the destination. An actor can send a message and continue without blocking.
+
+<a href="https://imgbb.com/"><img src="https://i.ibb.co/MP0BQ9w/image.png" alt="image" border="0"></a>
+
+>By sending a message, an actor delegates work to another actor. Actors are completely isolated from each other and they will never share memory.
+
+Since there is always at most one message being processed per actor, the invariants of an actor can be kept without synchronization. This happens automatically without using locks:
+
+<a href="https://imgbb.com/"><img src="https://i.ibb.co/nCmDwZK/image.png" alt="image" border="0"></a>
+
+In summary, this is what happens when an actor receives a message:
+
+1. The actor adds the message to the end of a queue.
+2. If the actor was not scheduled for execution, it is marked as ready to execute.
+3. A (hidden) scheduler entity takes the actor and starts executing it.
+4. Actor picks the message from the front of the queue.
+5. Actor modifies internal state, sends messages to other actors.
+6. The actor is unscheduled.
+
+It’s important to understand that, although multiple actors can run at the same time, an actor will process a given message sequentially. This means that if you send 3 messages to the same actor, it will just execute one at a time. To have these 3 messages being executed concurrently, you need to create 3 actors and send one message to each.
+
 #### Fairness and starvation
 So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://tutorials.jenkov.com/java-concurrency/starvation-and-fairness.html "Docs"):
 ```
