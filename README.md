@@ -770,6 +770,86 @@ for (int i = 0; i < 10000000; i++) {
 ```
 __Execution time__: 0.621791105
 
+### Stream API parallelism
+JDK has powerfull [api for streaming](https://docs.oracle.com/javase/tutorial/collections/streams/parallelism.html). But this section about parallelism and conccurency of such library.
+
+For example, we have list of numbers and then we need to multiply each number by some value. Our imperative aproach will be something like:
+```
+List<Integer> list = ...
+for (int i = 0; i < list.size(); i++) {
+    list.set(i, list.get(i) * N);
+}
+```
+This code is working fine, but kind of _"old"_. Let's use Stream API.
+```
+list.stream()
+    .map(obj -> obj * N)
+    .collect(Collectors.toList())
+```
+This stream operators make the same work, but in functional immutable style. In this case work of `map` operation is not blocking, maybe we can improve perfomance with parallel computing?
+```
+list.stream()
+    .parallel()
+    .map(obj -> obj * N)
+    .collect(Collectors.toList())
+```
+
+Let's focus of perfomance improvements and use [JMH benchamring](https://openjdk.java.net/projects/code-tools/jmh/).
+
+Here we have array of random elements (from 0 to 499):
+```
+public int[] elements = new Random(1)
+                .ints(N, 0, 500)
+                .toArray();
+```
+
+And two microbencharks (for example `N` = 2):
+```
+@Benchmark
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+public void streamBenchmark(StateChecker stateChecker, Blackhole blackhole) {
+     blackhole.consume(Arrays.stream(stateChecker.elements)
+              .map(element -> element * 2)
+              .toArray());
+}
+
+@Benchmark
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+public void parallelStreamBenchmark(StateChecker stateChecker, Blackhole blackhole) {
+     blackhole.consume(Arrays.stream(stateChecker.elements)
+              .parallel()
+              .map(element -> element * 2)
+              .toArray());
+}
+```
+
+[As i mentiond before](https://github.com/SlandShow/Concurrency#1-painter), perfomance actually depends on size of `list` in such case. Here 3 benchmarks with avarage time execition metrics.
+
+1.For `N` = 1000
+```
+Benchmark                            Mode  Cnt      Score     Error  Units
+MyBenchmark.parallelStreamBenchmark  avgt  200  22592.902 ± 410.930  ns/op
+MyBenchmark.streamBenchmark          avgt  200   1283.748 ±  11.793  ns/op
+```
+
+2. For `N` = 1000000
+```
+Benchmark                            Mode  Cnt        Score        Error  Units
+MyBenchmark.parallelStreamBenchmark  avgt  200  1955588.440 ± 180609.886  ns/op
+MyBenchmark.streamBenchmark          avgt  200  2557385.937 ± 149849.122  ns/op
+```
+
+3. For `N` = 1000000000
+```
+Benchmark                            Mode  Cnt          Score         Error  Units
+MyBenchmark.parallelStreamBenchmark  avgt  200   85611446.743 ± 2497237.447  ns/op
+MyBenchmark.streamBenchmark          avgt  200  139145582.378 ± 1980852.767  ns/op
+```
+
+As benchark results tell us, for small `N` there is no improvements, only for big values of `N`.
+
 ## JVM perfomance
 
 Some advanced topics and utilities for tracking JVM state. Some information taken from [OK course](https://m.ok.ru/dk?st.cmd=movieLayer&st.groupId=53245288710321&st.discId=1356680596145&st.retLoc=group&st.rtu=%2Fdk%3Fst.cmd%3DaltGroupMovies%26st.mrkId%3D1550654970205%26st.groupId%3D53245288710321%26st.frwd%3Don%26st.page%3D1%26_prevCmd%3DaltGroupMovies%26tkn%3D424&st.discType=GROUP_MOVIE&st.mvId=1356680596145&_prevCmd=altGroupMovies&tkn=3533#).
