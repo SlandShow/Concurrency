@@ -562,6 +562,82 @@ In summary, this is what happens when an actor receives a message:
 
 It’s important to understand that, although multiple actors can run at the same time, an actor will process a given message sequentially. This means that if you send 3 messages to the same actor, it will just execute one at a time. To have these 3 messages being executed concurrently, you need to create 3 actors and send one message to each.
 
+### Thread coordination
+There are 3 methods for inner threads coordination on fundamental level of `Object` class.
+1. `wait()`
+2. `notify()`
+3. `notifyAll()`
+
+__[Wait](https://docs.oracle.com/javase/7/docs/api/java/lang/Object.html#wait())__ causes the current thread to wait until another thread wakes it up. In the wait state, that thread is not consuming CPU.
+
+__[Notify](https://docs.oracle.com/javase/7/docs/api/java/lang/Object.html#notify())__ wakes up a single thread waiting on that object. 
+
+__[Notyfy all](https://docs.oracle.com/javase/7/docs/api/java/lang/Object.html#notifyAll())__ wakes up all the threads waiting on that object.
+
+To call `wait()`, `notify()` or `notifyAll()` we need to acquire the monitor of that object (use synchronization on that object). 
+
+Here we have two methods, which executed in two different threads.
+```
+    private static boolean flag = false;
+
+    private synchronized void unlock() {
+        if (!flag) {
+            this.notify();
+            flag = true;
+        }
+
+        System.out.println("Unlocked");
+    }
+
+     private synchronized void lock() {
+        while  (!flag) {
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println("Waiting for unlock");
+        }
+
+        System.out.println("Locked");
+    }
+```
+
+```
+Thread lockThread = new Thread(() -> lock());
+Thread unlockThread = new Thread(() -> unlock());
+
+lockThread.start();
+unlockThread.start();
+System.out.println("Main thread finished");
+```
+
+And we will get something like:
+```
+Finished main thread
+Waiting for unlock
+Unlocked
+Locked
+```
+
+When first thread trying to lock, then `wait()` call force `lockThread` to sleep. And then monitor is 
+freed up for `unlockThread`. It's very important detail, because `wait()` method [release monitor lock](https://stackoverflow.com/questions/13249835/java-does-wait-release-lock-from-synchronized-block). And, unfortunately, documentation lies about it.
+
+For example, if i will change `lock` method:
+```
+private synchronized void lock() {
+        while  (!flag) {
+            System.out.println("Waiting for unlock");
+        }
+        System.out.println("Locked");
+}
+```
+
+Then execution will be blocked.
+
+Also, `wait()` method must me invoked via synchronised block:
+>`IllegalMonitorStateException` if the current thread is not the owner of the object's monitor
+
 #### Fairness and starvation
 So, if we set flag `fair` of ReentrantLock to `true`, which means [next](http://tutorials.jenkov.com/java-concurrency/starvation-and-fairness.html "Docs"):
 ```
